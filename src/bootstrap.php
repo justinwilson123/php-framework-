@@ -2,10 +2,15 @@
 
 declare(strict_types=1);
 
+use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\ServerRequest;
 use GuzzleHttp\Psr7\Utils;
 use HttpSoft\Emitter\SapiEmitter;
+use League\Route\Route;
+use League\Route\Router;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseFactoryInterface;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
@@ -14,22 +19,51 @@ ini_set('display_errors', '1');
 
 $requst = ServerRequest::fromGlobals();
 
-$page = $requst->getQueryParams()['page'] ?? 'home';
+$router = new Router();
 
-$route =
-    ob_start();
+$router->get('/', function () {
 
-require dirname(__DIR__) . '/' . $page . '.php';
+    $stream = Utils::streamFor("Home Page");
 
-$content = ob_get_clean();
+    $response = new Response;
 
-$stream = Utils::streamFor($content);
+    $response = $response->withBody($stream);
+    return $response;
+});
 
-$response = new Response;
+$router->get('/products', function () {
 
-$response = $response->withHeader('Content-Type', 'text/html')
-    ->withStatus(418)
-    ->withBody($stream);
+    $stream = Utils::streamFor("All products");
+
+    $response = new Response;
+
+    $response = $response->withBody($stream);
+    return $response;
+});
+
+$router->map("GET", "/product", function (ServerRequest $request): Response {
+    $id = $request->getQueryParams()['id'];
+
+    $stream = Utils::streamFor("single product id = $id");
+
+    $response = new Response;
+
+    $response = $response->withBody($stream);
+    return $response;
+});
+$router->map("GET", "/oneproduct/{id:number}", function (ServerRequest $request, array $args): Response {
+    $id = $args['id'];
+
+    $stream = Utils::streamFor("single product id = $id");
+
+    $response = new Response;
+
+    $response = $response->withBody($stream);
+    return $response;
+});
+
+
+$response = $router->dispatch($requst);
 
 $emitter = new SapiEmitter;
 
