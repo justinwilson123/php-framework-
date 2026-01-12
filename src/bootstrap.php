@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Controllers\HomeController;
+use App\Controllers\ProductController;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\ServerRequest;
@@ -21,46 +23,24 @@ $requst = ServerRequest::fromGlobals();
 
 $router = new Router();
 
-$router->get('/', function () {
+$router->get(
+    '/',
+    [HomeController::class, "index"]
+    // function () {
 
-    $stream = Utils::streamFor("Home Page");
+    //     $stream = Utils::streamFor("Home Page");
 
-    $response = new Response;
+    //     $response = new Response;
 
-    $response = $response->withBody($stream);
-    return $response;
-});
+    //     $response = $response->withBody($stream);
+    //     return $response;
+    // }
+);
 
-$router->get('/products', function () {
+$router->get('/products', [ProductController::class, "products"]);
 
-    $stream = Utils::streamFor("All products");
-
-    $response = new Response;
-
-    $response = $response->withBody($stream);
-    return $response;
-});
-
-$router->map("GET", "/product", function (ServerRequest $request): Response {
-    $id = $request->getQueryParams()['id'];
-
-    $stream = Utils::streamFor("single product id = $id");
-
-    $response = new Response;
-
-    $response = $response->withBody($stream);
-    return $response;
-});
-$router->map("GET", "/oneproduct/{id:number}", function (ServerRequest $request, array $args): Response {
-    $id = $args['id'];
-
-    $stream = Utils::streamFor("single product id = $id");
-
-    $response = new Response;
-
-    $response = $response->withBody($stream);
-    return $response;
-});
+$router->map("GET", "/product", [ProductController::class, "product"]);
+$router->map("GET", "/oneproduct/{id:number}", [ProductController::class, "oneProduct"]);
 
 
 $response = $router->dispatch($requst);
